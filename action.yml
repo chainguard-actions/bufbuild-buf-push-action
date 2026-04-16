@@ -1,0 +1,31 @@
+name: buf-push
+description: >
+  Push buf module updates to the Buf Schema Registry.
+branding:
+  icon: arrow-up
+  color: blue
+inputs:
+  buf_token:
+    description: The Buf authentication token.
+    required: true
+  input:
+    description: The Input path.
+    default: "."
+    required: false
+  draft:
+    description: The identifier of pushing to the BSR as a draft commit, when set to 'true' the action will push the module as draft with the branch name as draft name.
+    required: false
+  create_visibility:
+    description: The visibility of the BSR repository to be created with, if one needs to be created.
+    required: false
+runs:
+  using: composite
+  steps:
+    - name: push
+      shell: bash
+      env:
+        BUF_TOKEN: ${{ inputs.buf_token }}
+        DRAFT: ${{ inputs.draft }}
+        CREATE_VISIBILITY: ${{ inputs.create_visibility }}
+        INPUT_PATH: ${{ inputs.input }}
+      run: $GITHUB_ACTION_PATH/push.bash "$INPUT_PATH"
