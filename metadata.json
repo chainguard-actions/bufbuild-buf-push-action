@@ -1,6 +1,0 @@
-{
-  "owner": "bufbuild",
-  "name": "buf-push-action",
-  "visibility": "internal",
-  "block_publish": false
-}
