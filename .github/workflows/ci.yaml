@@ -1,0 +1,44 @@
+name: ci
+on:
+  push:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2
+      - run: make test
+        shell: bash
+  action-test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2
+      - name: setup fake buf
+        shell: bash
+        run: |
+          mkdir -p tmp/bin
+          cp test/buf.bash tmp/bin/buf
+          chmod +x tmp/bin/buf
+          echo "${PWD}/tmp/bin" >> "${GITHUB_PATH}"
+      - name: run action
+        uses: ./
+        with:
+          buf_token: ${{ secrets.BUF_TOKEN }}
+          input: path/to/input
+        env:
+          WANT_BUF_TOKEN: ${{ secrets.BUF_TOKEN }}
+          WANT_ARGS: push path/to/input --tag ${{ github.sha }}
+      - name: run action with draft
+        uses: ./
+        with:
+          buf_token: ${{ secrets.BUF_TOKEN }}
+          input: path/to/input
+          draft: true
+        env:
+          WANT_BUF_TOKEN: ${{ secrets.BUF_TOKEN }}
+          WANT_ARGS: push path/to/input --draft ${{ github.ref_name }}

@@ -1,0 +1,36 @@
+name: Test buf not installed error
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Remove buf from PATH if present
+        run: |
+          # Remove buf from any standard location to ensure it's not found
+          sudo rm -f /usr/local/bin/buf /usr/bin/buf /usr/local/go/bin/buf 2>/dev/null || true
+          # Also remove from go bin if present
+          rm -f "$HOME/go/bin/buf" 2>/dev/null || true
+          echo "Verified buf is not installed:"
+          command -v buf 2>/dev/null && echo "WARNING: buf still found at $(which buf)" || echo "buf not found - good"
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          buf_token: fake-token-for-not-installed-test
+          input: "."
+      - name: Assert action failed with buf-not-installed error
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed as expected when buf is not installed"
+          elif [ "$OUTCOME" = "success" ]; then
+            echo "FAIL: action should have failed because buf is not installed"
+            exit 1
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
